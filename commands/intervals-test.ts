@@ -12,7 +12,7 @@ const command: Command = {
 
         // Test the intervals
         Object.values(intervalFuncs).forEach((func) => {
-            func();
+            func(true);
         });
     },
 };

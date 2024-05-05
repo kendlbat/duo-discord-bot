@@ -12,25 +12,27 @@ dotenv.config();
 
 const reminderChannelid = process.env.DISCORD_REMINDER_CHANNEL_ID!;
 export let funcs = {
-    reminderFunc: () => {},
-    checkFunc: () => {},
+    reminderFunc: (ignoreRedis: boolean = false) => {},
+    checkFunc: (ignoreRedis: boolean = false) => {},
 };
 
 const checkTime = 14;
 export default function createFuncs(client: Client) {
-    const reminderFunc = async () => {
+    const reminderFunc = async (ignoreRedis: boolean = false) => {
         const now = new Date();
         if (now.getUTCHours() < checkTime) return;
 
         const db = await DB();
 
-        const lastCheckFuncRun = await db.client.get("lastReminderFuncRun");
-        // If the last check function run was less than 1 hour ago, don't run it again
-        if (lastCheckFuncRun) {
-            const lastCheckFuncRunDate = new Date(lastCheckFuncRun);
-            const now = new Date();
-            const diff = now.getTime() - lastCheckFuncRunDate.getTime();
-            if (diff < 1000 * 60 * 60 * 1.9) return;
+        if (!ignoreRedis) {
+            const lastCheckFuncRun = await db.client.get("lastReminderFuncRun");
+            // If the last check function run was less than 1 hour ago, don't run it again
+            if (lastCheckFuncRun) {
+                const lastCheckFuncRunDate = new Date(lastCheckFuncRun);
+                const now = new Date();
+                const diff = now.getTime() - lastCheckFuncRunDate.getTime();
+                if (diff < 1000 * 60 * 60 * 1.9) return;
+            }
         }
 
         await db.client.set("lastReminderFuncRun", new Date().toISOString());
@@ -59,7 +61,7 @@ export default function createFuncs(client: Client) {
     };
 
     // This function handles creating "events" from updated duolingo data
-    const checkFunc = async () => {
+    const checkFunc = async (ignoreRedis: boolean = false) => {
         (async () => {
             // This checks for streak extensions
             const prev = Object.fromEntries(
