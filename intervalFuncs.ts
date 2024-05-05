@@ -51,11 +51,14 @@ export default function createFuncs(client: Client) {
         if (!channel) return;
         if (!channel.isTextBased()) return;
 
-        const remainingLocalTime = 24 - now.getHours();
+        const remainingMinutes = 60 - now.getUTCMinutes();
+        const remainingHours = 23 - now.getUTCHours();
 
         const message = `These users
     ${users.map((user) => `<@${user.id}>`).join("\n")}
-    have not done their Duolingo lessons today! There are ${remainingLocalTime} hours left to do them! :owl::knife:`;
+    have not done their Duolingo lessons today! There are ${
+        remainingHours > 0 ? remainingHours + "hours and " : ""
+    } ${remainingMinutes} minutes left to do them! :owl::knife:`;
 
         channel.send(message);
     };
