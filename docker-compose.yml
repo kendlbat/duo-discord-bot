@@ -1,0 +1,14 @@
+services:
+    app:
+        image: node
+        volumes:
+            - .:/app
+        working_dir: /app
+        command: npm start
+        restart: always
+    redis:
+        image: redis
+        # For testing: expose the port
+        ports:
+            - "6379:6379"
+        restart: always
