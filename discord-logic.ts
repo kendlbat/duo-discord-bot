@@ -70,26 +70,29 @@ export const discordMain = async () => {
         commands[command.data.name] = command;
     }
 
-    client.on(Discord.Events.InteractionCreate, async (interaction) => {
-        if (!interaction.isChatInputCommand()) return;
+    client.on(
+        Discord.Events.InteractionCreate,
+        async (interaction: Discord.Interaction) => {
+            if (!interaction.isChatInputCommand()) return;
 
-        const command = commands[interaction.commandName];
-        if (!command) return;
+            const command = commands[interaction.commandName];
+            if (!command) return;
 
-        try {
-            await command.execute(interaction);
-        } catch (error) {
-            console.error(error);
-            if (interaction.replied || interaction.deferred)
-                await interaction.followUp(
-                    "There was an error while executing this command!"
-                );
-            else
-                await interaction.reply(
-                    "There was an error while executing this command!"
-                );
+            try {
+                await command.execute(interaction);
+            } catch (error) {
+                console.error(error);
+                if (interaction.replied || interaction.deferred)
+                    await interaction.followUp(
+                        "There was an error while executing this command!"
+                    );
+                else
+                    await interaction.reply(
+                        "There was an error while executing this command!"
+                    );
+            }
         }
-    });
+    );
 
     client.once("ready", () => {
         logger.info("Discord bot is ready!");
