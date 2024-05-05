@@ -5,6 +5,8 @@ services:
         restart: always
         depends_on:
             - redis
+        environment:
+            - TZ=Europe/Vienna
     redis:
         image: redis
         restart: always
