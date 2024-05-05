@@ -66,15 +66,13 @@ export async function imageUrlToDataUrl(url: string) {
         throw new Error("Failed to fetch image");
     }
 
-    const blob = await res.blob();
+    const blob = await res.arrayBuffer();
 
-    return new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-            resolve(reader.result as string);
-        };
-        reader.readAsDataURL(blob);
-    });
+    const buffer = Buffer.from(blob);
+
+    return `data:${res.headers.get("content-type")};base64,${buffer.toString(
+        "base64"
+    )}`;
 }
 
 export async function getDuoData(userId: string): Promise<DuoApiResponse> {
