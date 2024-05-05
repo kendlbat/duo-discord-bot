@@ -1,8 +1,6 @@
 services:
     app:
         image: node
-        volumes:
-            - .:/app
         build: .
         restart: always
     redis:
