@@ -22,6 +22,20 @@ const command: Command = {
             (user) => !hasDoneDuolingoToday(user.duo.streakData.currentStreak)
         );
 
+        if (users.length === 0) {
+            const embed = new EmbedBuilder()
+                .setColor("#00ff00")
+                .setTitle("Everyone has done their Duolingo lessons today!")
+                .setFooter({
+                    text: funnyQuotes[
+                        Math.floor(Math.random() * funnyQuotes.length)
+                    ],
+                });
+
+            interaction.reply({ embeds: [embed] });
+            return;
+        }
+
         const embed = new EmbedBuilder()
             .setColor("#ff0000")
             .setTitle("Kill List")
