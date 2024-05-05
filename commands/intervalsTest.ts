@@ -4,7 +4,7 @@ import { funcs as intervalFuncs } from "../intervalFuncs";
 
 const command: Command = {
     data: new SlashCommandBuilder()
-        .setName("intervalsTest")
+        .setName("intervals-test")
         .setDescription("Test the intervals.")
         .setDefaultMemberPermissions(0),
     async execute(interaction) {
