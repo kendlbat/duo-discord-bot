@@ -1,6 +1,7 @@
 import { SlashCommandBuilder } from "discord.js";
 import { Command } from "../types";
 import { getAvatarUrl, getDuoData } from "../duolingo";
+import { DB } from "../data";
 
 const command: Command = {
     data: new SlashCommandBuilder()
@@ -54,9 +55,29 @@ const command: Command = {
         ) {
             return;
         }
+        const db = await DB();
 
-        const userData = await getDuoData(user.id);
-        const avatarUrl = await getAvatarUrl(userData, size);
+        const userDataRaw = await db.client.hGet("users", user.id);
+
+        if (!userDataRaw) {
+            interaction.reply({
+                content: `This user is not registered!`,
+            });
+            return;
+        }
+
+        const userData = JSON.parse(userDataRaw);
+
+        if (!userData?.duoData?.id) {
+            interaction.reply({
+                content: `This user is not registered!`,
+            });
+            return;
+        }
+
+        const duoData = await getDuoData(userData.duoData.id);
+
+        const avatarUrl = await getAvatarUrl(duoData, size);
 
         interaction.reply({
             content: `Here is the avatar of ${user.username}!`,
