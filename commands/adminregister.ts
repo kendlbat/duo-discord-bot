@@ -6,7 +6,7 @@ const command: Command = {
     data: new SlashCommandBuilder()
         .setName("adminregister")
         .setDescription("Register a user's duo!")
-        .setDefaultMemberPermissions("0")
+        .setDefaultMemberPermissions(0)
         .addUserOption((option) =>
             option
                 .setName("user")

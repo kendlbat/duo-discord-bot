@@ -11,13 +11,13 @@ import {
     hasDoneDuolingoToday,
 } from "./duolingo";
 import { DB } from "./data";
+import createFuncs from "./intervalFuncs";
 
 dotenv.config();
 
 const token = process.env.DISCORD_TOKEN!;
 const guildid = process.env.DISCORD_GUILD_ID!;
 const clientId = process.env.DISCORD_CLIENT_ID!;
-const reminderChannelid = process.env.DISCORD_REMINDER_CHANNEL_ID!;
 
 const rest = new Discord.REST().setToken(token);
 
@@ -98,102 +98,9 @@ export const discordMain = async () => {
         logger.info("Discord bot is ready!");
         registerCommands(commands);
 
-        // Every two hours after 2pm UTC, check who has not done their duolingo lessons for today.
-        const checkTime = 14;
-        const reminderFunc = async () => {
-            const now = new Date();
-            if (now.getUTCHours() < checkTime) return;
+        // Every two hours after 2pm UTC, check who has not done their duolingo lessons for today
 
-            const db = await DB();
-
-            const lastCheckFuncRun = await db.client.get("lastReminderFuncRun");
-            // If the last check function run was less than 1 hour ago, don't run it again
-            if (lastCheckFuncRun) {
-                const lastCheckFuncRunDate = new Date(lastCheckFuncRun);
-                const now = new Date();
-                const diff = now.getTime() - lastCheckFuncRunDate.getTime();
-                if (diff < 1000 * 60 * 60 * 1.9) return;
-            }
-
-            await db.client.set(
-                "lastReminderFuncRun",
-                new Date().toISOString()
-            );
-
-            logger.debug(
-                "Hourly checking for users who have not done their Duolingo lessons today."
-            );
-
-            const users = (await getAllUserData()).filter(
-                (user) =>
-                    !hasDoneDuolingoToday(user.duo.streakData.currentStreak)
-            );
-
-            if (users.length === 0) return;
-
-            const channel = client.channels.cache.get(reminderChannelid);
-            if (!channel) return;
-            if (!channel.isTextBased()) return;
-
-            const remainingLocalTime = 24 - now.getHours();
-
-            const message = `These users
-${users.map((user) => `<@${user.id}>`).join("\n")}
-have not done their Duolingo lessons today! There are ${remainingLocalTime} hours left to do them! :owl::knife:`;
-
-            channel.send(message);
-        };
-
-        // This function handles creating "events" from updated duolingo data
-        const checkFunc = async () => {
-            (async () => {
-                // This checks for streak extensions
-                const prev = Object.fromEntries(
-                    Object.entries(await getAllCachedUserData()).filter(
-                        ([key, value]) =>
-                            !hasDoneDuolingoToday(
-                                value.duo.streakData.currentStreak
-                            )
-                    )
-                );
-
-                const now = await getAllUserData(Object.keys(prev));
-
-                logger.debug(JSON.stringify(prev));
-
-                const updated = now.filter(
-                    (user) =>
-                        prev[user.id]?.duo &&
-                        user?.duo &&
-                        !hasDoneDuolingoToday(
-                            prev[user.id].duo.streakData.currentStreak
-                        ) &&
-                        hasDoneDuolingoToday(user.duo.streakData.currentStreak)
-                );
-
-                if (updated.length === 0) return;
-
-                logger.info(`Streak extensions: ${updated.map((u) => u.id)}`);
-
-                const channel = client.channels.cache.get(reminderChannelid);
-                if (!channel) return;
-                if (!channel.isTextBased()) return;
-
-                if (updated.length == 1) {
-                    channel.send(
-                        `Congratulations <@${updated[0].id}>! You have extended your Duolingo streak! :tada:`
-                    );
-                } else {
-                    channel.send(
-                        `Congratulations to these users: ${updated
-                            .map((user) => `<@${user.id}>`)
-                            .join(
-                                ", "
-                            )}! You have extended your Duolingo streak! :tada:`
-                    );
-                }
-            })();
-        };
+        const { reminderFunc, checkFunc } = createFuncs(client);
 
         setInterval(reminderFunc, 1000 * 60 * 60 * 2);
         setInterval(checkFunc, 1000 * 60 * 5);
