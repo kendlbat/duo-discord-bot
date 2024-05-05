@@ -1,4 +1,8 @@
-import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
+import {
+    AttachmentBuilder,
+    EmbedBuilder,
+    SlashCommandBuilder,
+} from "discord.js";
 import { Command } from "../types";
 import { getAvatarUrl, getDuoData, imageUrlToDataUrl } from "../duolingo";
 import { DB } from "../data";
@@ -77,13 +81,20 @@ const command: Command = {
 
         const duoData = await getDuoData(userData.duoData.id);
 
-        const avatarUrl = await imageUrlToDataUrl(getAvatarUrl(duoData, size));
+        const avatarUrl = getAvatarUrl(duoData, size);
+
+        const image = await fetch(avatarUrl).then(
+            async (res) =>
+                new AttachmentBuilder(Buffer.from(await res.arrayBuffer()), {
+                    name: "avatar.png",
+                })
+        );
 
         const embed = new EmbedBuilder()
             .setTitle(duoData.username)
-            .setImage(avatarUrl);
+            .setImage("attachment://avatar.png");
 
-        interaction.reply({ embeds: [embed] });
+        interaction.reply({ embeds: [embed], files: [image] });
     },
 };
 
