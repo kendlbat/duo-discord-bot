@@ -3,6 +3,8 @@ services:
         image: node
         build: .
         restart: always
+        depends_on:
+            - redis
     redis:
         image: redis
         # For testing: expose the port
