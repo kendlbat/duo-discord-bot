@@ -12,3 +12,14 @@ DISCORD_GUILD_ID=
 DISCORD_CLIENT_ID=
 DISCORD_REMINDER_CHANNEL_ID=
 ```
+
+## Deploy update commands for Azure
+
+This is just for me:
+
+```sh
+git pull
+sudo docker compose build app
+sudo docker compose down app
+sudo docker compose up -d app
+```
