@@ -99,7 +99,7 @@ export const discordMain = async () => {
         registerCommands(commands);
 
         // Every two hours after 2pm UTC, check who has not done their duolingo lessons for today.
-        const checkTime = 0;
+        const checkTime = 14;
         const reminderFunc = async () => {
             const now = new Date();
             if (now.getUTCHours() < checkTime) return;
