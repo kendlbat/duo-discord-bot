@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from "discord.js";
+import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import { Command } from "../types";
 import { getAvatarUrl, getDuoData } from "../duolingo";
 import { DB } from "../data";
@@ -79,10 +79,11 @@ const command: Command = {
 
         const avatarUrl = await getAvatarUrl(duoData, size);
 
-        interaction.reply({
-            content: `Here is the avatar of ${user.username}!`,
-            files: [avatarUrl],
-        });
+        const embed = new EmbedBuilder()
+            .setTitle(duoData.username)
+            .setImage(avatarUrl);
+
+        interaction.reply({ embeds: [embed] });
     },
 };
 
