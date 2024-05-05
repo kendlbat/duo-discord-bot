@@ -52,11 +52,29 @@ export async function getAllCachedUserData(): Promise<{
  * @param userData The data you got from getDuoData
  * @param size One of the following: "xlarge" (200x200), "xxlarge" (1000x1000), "large" (90x90), "medium" (48x48), "small" (24x24)
  */
-export async function getAvatarUrl(
+export function getAvatarUrl(
     userData: DuoApiResponse,
     size: "small" | "medium" | "large" | "xlarge" | "xxlarge" = "large"
 ) {
     return "https:" + userData.picture + `/${size}`;
+}
+
+export async function imageUrlToDataUrl(url: string) {
+    const res = await fetch(url);
+
+    if (!res.ok) {
+        throw new Error("Failed to fetch image");
+    }
+
+    const blob = await res.blob();
+
+    return new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            resolve(reader.result as string);
+        };
+        reader.readAsDataURL(blob);
+    });
 }
 
 export async function getDuoData(userId: string): Promise<DuoApiResponse> {

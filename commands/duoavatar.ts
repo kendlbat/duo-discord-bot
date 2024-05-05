@@ -1,6 +1,6 @@
 import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import { Command } from "../types";
-import { getAvatarUrl, getDuoData } from "../duolingo";
+import { getAvatarUrl, getDuoData, imageUrlToDataUrl } from "../duolingo";
 import { DB } from "../data";
 
 const command: Command = {
@@ -77,7 +77,7 @@ const command: Command = {
 
         const duoData = await getDuoData(userData.duoData.id);
 
-        const avatarUrl = await getAvatarUrl(duoData, size);
+        const avatarUrl = await imageUrlToDataUrl(getAvatarUrl(duoData, size));
 
         const embed = new EmbedBuilder()
             .setTitle(duoData.username)
