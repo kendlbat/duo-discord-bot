@@ -137,7 +137,7 @@ export async function getAllUserData(
     userIds?: string[]
 ): Promise<{ id: string; duo: DuoApiResponse }[]> {
     const db = await DB();
-    const users = await db.getUsers();
+    const users = await db.getUsers(userIds);
     return await Promise.allSettled(
         Object.entries(users).map(async (entry) => {
             const [id, user] = entry;
