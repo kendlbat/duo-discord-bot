@@ -102,10 +102,17 @@ export const discordMain = async () => {
 
         const { reminderFunc, checkFunc } = createFuncs(client);
 
-        setInterval(reminderFunc, 1000 * 60 * 60 * 2);
-        setInterval(checkFunc, 1000 * 60 * 5);
-        reminderFunc();
-        checkFunc();
+        const runReminderFunc = () => {
+            reminderFunc();
+            setTimeout(runReminderFunc, 1000 * 60 * 60 * 2);
+        };
+        const runCheckFunc = () => {
+            checkFunc();
+            setTimeout(runCheckFunc, 1000 * 60 * 5);
+        };
+
+        runReminderFunc();
+        runCheckFunc();
     });
 
     logger.debug(`Discord commands: ${Object.keys(commands).join(", ")}`);
