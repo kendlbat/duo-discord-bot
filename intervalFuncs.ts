@@ -16,11 +16,11 @@ export let funcs = {
     checkFunc: (ignoreRedis: boolean = false) => {},
 };
 
-const checkTime = 14;
+const checkTime = 16;
 export default function createFuncs(client: Client) {
     const reminderFunc = async (ignoreRedis: boolean = false) => {
         const now = new Date();
-        if (now.getUTCHours() < checkTime) return;
+        if (now.getHours() < checkTime) return;
 
         const db = await DB();
 
@@ -51,13 +51,13 @@ export default function createFuncs(client: Client) {
         if (!channel) return;
         if (!channel.isTextBased()) return;
 
-        const remainingMinutes = 60 - now.getUTCMinutes();
-        const remainingHours = 23 - now.getUTCHours();
+        const remainingMinutes = 60 - now.getMinutes();
+        const remainingHours = 23 - now.getHours();
 
         const message = `These users
     ${users.map((user) => `<@${user.id}>`).join("\n")}
     have not done their Duolingo lessons today! There are ${
-        remainingHours > 0 ? remainingHours + "hours and " : ""
+        remainingHours > 0 ? remainingHours + " hours and " : ""
     } ${remainingMinutes} minutes left to do them! :owl::knife:`;
 
         channel.send(message);
@@ -82,11 +82,7 @@ export default function createFuncs(client: Client) {
 
             const updated = now.filter(
                 (user) =>
-                    prev[user.id]?.duo &&
                     user?.duo &&
-                    !hasDoneDuolingoToday(
-                        prev[user.id].duo.streakData.currentStreak
-                    ) &&
                     hasDoneDuolingoToday(user.duo.streakData.currentStreak)
             );
 
@@ -99,11 +95,11 @@ export default function createFuncs(client: Client) {
             if (!channel.isTextBased()) return;
 
             if (updated.length == 1) {
-                channel.send(
+                await channel.send(
                     `Congratulations <@${updated[0].id}>! You have extended your Duolingo streak! :tada:`
                 );
             } else {
-                channel.send(
+                await channel.send(
                     `Congratulations to these users: ${updated
                         .map((user) => `<@${user.id}>`)
                         .join(
