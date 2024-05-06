@@ -83,6 +83,8 @@ export default function createFuncs(client: Client) {
                 hasDoneDuolingoToday(user.duo.streakData.currentStreak)
         );
 
+        logger.info("Found streak extensions: " + updated.length);
+
         if (updated.length === 0) return;
 
         logger.info(`Streak extensions: ${updated.map((u) => u.id)}`);
