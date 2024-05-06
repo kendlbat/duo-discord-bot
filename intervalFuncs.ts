@@ -65,49 +65,45 @@ export default function createFuncs(client: Client) {
 
     // This function handles creating "events" from updated duolingo data
     const checkFunc = async (ignoreRedis: boolean = false) => {
-        (async () => {
-            // This checks for streak extensions
-            const prev = Object.fromEntries(
-                Object.entries(await getAllCachedUserData()).filter(
-                    ([key, value]) =>
-                        !hasDoneDuolingoToday(
-                            value.duo.streakData.currentStreak
-                        )
-                )
+        // This checks for streak extensions
+        const prev = Object.fromEntries(
+            Object.entries(await getAllCachedUserData()).filter(
+                ([key, value]) =>
+                    !hasDoneDuolingoToday(value.duo.streakData.currentStreak)
+            )
+        );
+
+        const now = await getAllUserData(Object.keys(prev));
+
+        logger.debug(JSON.stringify(prev));
+
+        const updated = now.filter(
+            (user) =>
+                user?.duo &&
+                hasDoneDuolingoToday(user.duo.streakData.currentStreak)
+        );
+
+        if (updated.length === 0) return;
+
+        logger.info(`Streak extensions: ${updated.map((u) => u.id)}`);
+
+        const channel = client.channels.cache.get(reminderChannelid);
+        if (!channel) return;
+        if (!channel.isTextBased()) return;
+
+        if (updated.length == 1) {
+            await channel.send(
+                `Congratulations <@${updated[0].id}>! You have extended your Duolingo streak! :tada:`
             );
-
-            const now = await getAllUserData(Object.keys(prev));
-
-            logger.debug(JSON.stringify(prev));
-
-            const updated = now.filter(
-                (user) =>
-                    user?.duo &&
-                    hasDoneDuolingoToday(user.duo.streakData.currentStreak)
+        } else {
+            await channel.send(
+                `Congratulations to these users: ${updated
+                    .map((user) => `<@${user.id}>`)
+                    .join(
+                        ", "
+                    )}! You have extended your Duolingo streak! :tada:`
             );
-
-            if (updated.length === 0) return;
-
-            logger.info(`Streak extensions: ${updated.map((u) => u.id)}`);
-
-            const channel = client.channels.cache.get(reminderChannelid);
-            if (!channel) return;
-            if (!channel.isTextBased()) return;
-
-            if (updated.length == 1) {
-                await channel.send(
-                    `Congratulations <@${updated[0].id}>! You have extended your Duolingo streak! :tada:`
-                );
-            } else {
-                await channel.send(
-                    `Congratulations to these users: ${updated
-                        .map((user) => `<@${user.id}>`)
-                        .join(
-                            ", "
-                        )}! You have extended your Duolingo streak! :tada:`
-                );
-            }
-        })();
+        }
     };
 
     funcs = {
