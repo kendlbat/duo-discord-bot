@@ -84,9 +84,13 @@ export default function createFuncs(client: Client) {
             streakextData = JSON.parse(streakextDataRaw);
         }
 
-        if (streakextData.date !== new Date().toISOString().split("T")[0]) {
+        let date = new Date();
+
+        date.setHours(date.getHours() - date.getTimezoneOffset() / 60);
+
+        if (streakextData.date !== date.toISOString().split("T")[0]) {
             streakextData = {
-                date: new Date().toISOString().split("T")[0],
+                date: date.toISOString().split("T")[0],
                 sent: [],
             };
             await db.client.set("streakextData", JSON.stringify(streakextData));
@@ -105,10 +109,10 @@ export default function createFuncs(client: Client) {
 
         logger.info(`Streak extensions: ${updated.map((u) => u.id)}`);
 
-        streakextData.sent = [
-            ...streakextData.sent,
-            ...updated.map((u) => u.id),
-        ];
+        streakextData = {
+            date: new Date().toISOString().split("T")[0],
+            sent: [...streakextData.sent, ...updated.map((u) => u.id)],
+        };
         await db.client.set("streakextData", JSON.stringify(streakextData));
 
         const channel = client.channels.cache.get(reminderChannelid);

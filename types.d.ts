@@ -16,4 +16,16 @@ type UserData = {
     };
 };
 
+type XpSummary = {
+    gainedXp?: number;
+    frozen: boolean;
+    streakExtended: boolean;
+    date: number;
+    userId: number;
+    repaired: boolean;
+    dailyGoalXp?: number;
+    numSessions?: number;
+    totalSessionTime?: number;
+};
+
 type DuoApiResponse = DuoApiResponseExt;

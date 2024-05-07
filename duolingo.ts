@@ -1,5 +1,5 @@
 import { DB } from "./data";
-import { DuoApiResponse } from "./types";
+import { DuoApiResponse, XpSummary } from "./types";
 
 type StreakInfo = {
     endDate: string;
@@ -75,6 +75,51 @@ export async function imageUrlToDataUrl(url: string) {
     )}`;
 }
 
+export async function getXpSummaries(userId: string): Promise<XpSummary[]> {
+    const { client } = await DB();
+
+    const cachedData = await client.hGet("duoXpSummaries", userId);
+    const lastUpdated = await client.hGet("duoXpSummariesTimestamp", userId);
+    if (cachedData && lastUpdated) {
+        const lastUpdatedDate = new Date(lastUpdated);
+        const now = new Date();
+        const diff = Math.floor(
+            (now.getTime() - lastUpdatedDate.getTime()) / (1000 * 60)
+        );
+        if (diff < CACHE_TIMEOUT_MINUTES) {
+            return JSON.parse(cachedData);
+        }
+    }
+
+    const data = await fetch(
+        `https://www.duolingo.com/2017-06-30/users/${userId}/xp_summaries?_=${Date.now()}`
+    )
+        .then(async (res) => {
+            if (!res.ok) {
+                throw new Error("Failed to fetch data");
+            }
+            if (
+                !res.headers.get("content-type")?.includes("application/json")
+            ) {
+                throw new TypeError("Invalid data");
+            }
+            if (res.status !== 200) {
+                throw new Error("Invalid status code");
+            }
+            return (await res.json()) as any;
+        })
+        .then((data) => data.summaries as XpSummary[]);
+
+    await client.hSet("duoXpSummaries", userId, JSON.stringify(data));
+    await client.hSet(
+        "duoXpSummariesTimestamp",
+        userId,
+        new Date().toISOString()
+    );
+
+    return data;
+}
+
 export async function getDuoData(userId: string): Promise<DuoApiResponse> {
     const { client } = await DB();
 
@@ -93,8 +138,9 @@ export async function getDuoData(userId: string): Promise<DuoApiResponse> {
     }
 
     // If the data is not cached, fetch it
+    // Get seconds since epoch
     const duoData = await fetch(
-        `https://www.duolingo.com/2017-06-30/users/${userId}?fields=acquisitionSurveyReason,adsConfig,animationEnabled,betaStatus,blockedUserIds,blockerUserIds,canUseModerationTools,classroomLeaderboardsEnabled,courses,creationDate,currentCourseId,email,emailAnnouncement,emailAssignment,emailAssignmentComplete,emailClassroomJoin,emailClassroomLeave,emailEditSuggested,emailEventsDigest,emailFollow,emailPass,emailPromotion,emailResearch,emailWeeklyProgressReport,emailSchoolsAnnouncement,emailSchoolsNewsletter,emailSchoolsProductUpdate,emailSchoolsPromotion,emailStreamPost,emailVerified,emailWeeklyReport,enableMicrophone,enableSoundEffects,enableSpeaker,experiments{connect_enable_social_underage_v2,connect_friends_quests_gifting_2,connect_web_migrate_to_feed_service,designsys_web_redesign_settings_page,gweb_diamond_tournament_dogfooding,minfra_web_stripe_setup_intent,path__web_gpt_info_stories,path_web_course_complete_slides,path_web_duoradio_audio_controls_redesign_v2,path_web_example_sentences_with_transliterations,path_web_hover,path_web_persistent_headers_redesign,path_web_remove_about_course_page,path_web_sections_overview,path_web_smec,retention_web_fix_lapsed_banner_shows,retention_web_streak_earnback_challenge_v2,spack_web_5xp_g_practice,spack_web_animation_checklist,spack_web_animation_longscroll,spack_web_copysolidate_hearts,spack_web_copysolidate_super_longscroll,spack_web_fp_upgrade_hook,spack_web_hearts_on_off,spack_web_super_promo_d12_ft_ineligible,spack_web_super_promo_d12_pf2_v2,spack_web_upgrade_flow,tsl_web_tournament_fetch_data,tsl_web_tournament_port},facebookId,fromLanguage,gemsConfig,globalAmbassadorStatus,googleId,hasFacebookId,hasGoogleId,hasPlus,health,id,inviteURL,joinedClassroomIds,lastResurrectionTimestamp,learningLanguage,lingots,location,monthlyXp,name,observedClassroomIds,optionalFeatures,persistentNotifications,picture,plusDiscounts,practiceReminderSettings,privacySettings,referralInfo,rewardBundles,roles,sessionCount,streak,streakData{currentStreak,longestStreak,previousStreak},timezone,timezoneOffset,totalXp,trackingProperties,username,webNotificationIds,weeklyXp,xpGains,xpGoal,zhTw,currentCourse&_=1714854814337`
+        `https://www.duolingo.com/2017-06-30/users/${userId}?fields=acquisitionSurveyReason,adsConfig,animationEnabled,betaStatus,blockedUserIds,blockerUserIds,canUseModerationTools,classroomLeaderboardsEnabled,courses,creationDate,currentCourseId,email,emailAnnouncement,emailAssignment,emailAssignmentComplete,emailClassroomJoin,emailClassroomLeave,emailEditSuggested,emailEventsDigest,emailFollow,emailPass,emailPromotion,emailResearch,emailWeeklyProgressReport,emailSchoolsAnnouncement,emailSchoolsNewsletter,emailSchoolsProductUpdate,emailSchoolsPromotion,emailStreamPost,emailVerified,emailWeeklyReport,enableMicrophone,enableSoundEffects,enableSpeaker,experiments{connect_enable_social_underage_v2,connect_friends_quests_gifting_2,connect_web_migrate_to_feed_service,designsys_web_redesign_settings_page,gweb_diamond_tournament_dogfooding,minfra_web_stripe_setup_intent,path__web_gpt_info_stories,path_web_course_complete_slides,path_web_duoradio_audio_controls_redesign_v2,path_web_example_sentences_with_transliterations,path_web_hover,path_web_persistent_headers_redesign,path_web_remove_about_course_page,path_web_sections_overview,path_web_smec,retention_web_fix_lapsed_banner_shows,retention_web_streak_earnback_challenge_v2,spack_web_5xp_g_practice,spack_web_animation_checklist,spack_web_animation_longscroll,spack_web_copysolidate_hearts,spack_web_copysolidate_super_longscroll,spack_web_fp_upgrade_hook,spack_web_hearts_on_off,spack_web_super_promo_d12_ft_ineligible,spack_web_super_promo_d12_pf2_v2,spack_web_upgrade_flow,tsl_web_tournament_fetch_data,tsl_web_tournament_port},facebookId,fromLanguage,gemsConfig,globalAmbassadorStatus,googleId,hasFacebookId,hasGoogleId,hasPlus,health,id,inviteURL,joinedClassroomIds,lastResurrectionTimestamp,learningLanguage,lingots,location,monthlyXp,name,observedClassroomIds,optionalFeatures,persistentNotifications,picture,plusDiscounts,practiceReminderSettings,privacySettings,referralInfo,rewardBundles,roles,sessionCount,streak,streakData{currentStreak,longestStreak,previousStreak},timezone,timezoneOffset,totalXp,trackingProperties,username,webNotificationIds,weeklyXp,xpGains,xpGoal,zhTw,currentCourse&_=${Date.now()}`
     ).then((res) => {
         if (!res.ok) {
             throw new Error("Failed to fetch data");
