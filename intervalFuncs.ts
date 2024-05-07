@@ -65,22 +65,38 @@ export default function createFuncs(client: Client) {
 
     // This function handles creating "events" from updated duolingo data
     const checkFunc = async (ignoreRedis: boolean = false) => {
-        // This checks for streak extensions
-        const prev = Object.fromEntries(
-            Object.entries(await getAllCachedUserData()).filter(
-                ([key, value]) =>
-                    !hasDoneDuolingoToday(value.duo.streakData.currentStreak)
-            )
-        );
+        const db = await DB();
 
-        const now = await getAllUserData(Object.keys(prev));
+        let streakextDataRaw = await db.client.get("streakextData");
+        let streakextData: {
+            date: string;
+            sent: string[];
+        };
 
-        logger.debug(JSON.stringify(prev));
+        // StreakextData is a JSON key
+        if (!streakextDataRaw) {
+            streakextData = {
+                date: new Date().toISOString().split("T")[0],
+                sent: [],
+            };
+            await db.client.set("streakextData", JSON.stringify(streakextData));
+        } else {
+            streakextData = JSON.parse(streakextDataRaw);
+        }
 
-        const updated = now.filter(
-            (user) =>
-                user?.duo &&
-                hasDoneDuolingoToday(user.duo.streakData.currentStreak)
+        if (streakextData.date !== new Date().toISOString().split("T")[0]) {
+            streakextData = {
+                date: new Date().toISOString().split("T")[0],
+                sent: [],
+            };
+            await db.client.set("streakextData", JSON.stringify(streakextData));
+        }
+
+        const updated = (await getAllUserData()).filter(
+            ({ id, duo }) =>
+                duo &&
+                hasDoneDuolingoToday(duo.streakData.currentStreak) &&
+                !streakextData.sent.includes(id)
         );
 
         logger.info("Found streak extensions: " + updated.length);
@@ -88,6 +104,12 @@ export default function createFuncs(client: Client) {
         if (updated.length === 0) return;
 
         logger.info(`Streak extensions: ${updated.map((u) => u.id)}`);
+
+        streakextData.sent = [
+            ...streakextData.sent,
+            ...updated.map((u) => u.id),
+        ];
+        await db.client.set("streakextData", JSON.stringify(streakextData));
 
         const channel = client.channels.cache.get(reminderChannelid);
         if (!channel) return;
