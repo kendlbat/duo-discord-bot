@@ -2,7 +2,7 @@ import { SlashCommandBuilder } from "discord.js";
 import { Command } from "../types";
 import { getXpSummaries } from "../duolingo";
 import { DB } from "../data";
-import { createSingleUserChart } from "../charts";
+// import { createSingleUserChart } from "../charts";
 
 const command: Command = {
     data: new SlashCommandBuilder()
@@ -32,16 +32,16 @@ const command: Command = {
 
         const data = await getXpSummaries(duoData.id);
 
-        const chart = await createSingleUserChart(data);
+        // const chart = await createSingleUserChart(data);
 
-        await interaction.reply({
+        /* await interaction.reply({
             files: [
                 {
                     attachment: chart,
                     name: "chart.png",
                 },
             ],
-        });
+        }); */
     },
 };
 
