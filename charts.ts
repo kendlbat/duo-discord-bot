@@ -1,4 +1,4 @@
-import { XpSummary } from "./types";
+/* import { XpSummary } from "./types";
 import { getXpSummaries } from "./duolingo";
 import d3 from "d3";
 
@@ -6,7 +6,7 @@ import d3 from "d3";
     width: 800,
     height: 400,
     backgroundColour: "#131f24",
-}); */
+}); 
 
 const width = 800;
 const height = 400;
@@ -83,4 +83,4 @@ async function test() {
     // Open the chart in a browser
     (await import("fs")).writeFileSync("chart.png", chart);
     console.log("Chart saved to chart.png");
-}
+} */
