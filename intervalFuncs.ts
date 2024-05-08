@@ -86,7 +86,7 @@ export default function createFuncs(client: Client) {
 
         let date = new Date();
 
-        date.setHours(date.getHours() - date.getTimezoneOffset() / 60);
+        // date.setHours(date.getHours() - date.getTimezoneOffset() / 60);
 
         if (streakextData.date !== date.toISOString().split("T")[0]) {
             streakextData = {
