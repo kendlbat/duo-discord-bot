@@ -21,16 +21,16 @@ const command: Command = {
                         if (!duo?.id) throw 1;
                         return {
                             id,
-                            xp: await getXpSummaries(duo?.id.toString()),
+                            xp: (
+                                await getXpSummaries(duo?.id.toString())
+                            ).slice(0, -1),
                         };
                     })
                 )
             ).filter(
                 (p) => p.status === "fulfilled"
             ) as PromiseFulfilledResult<{ id: string; xp: XpSummary[] }>[]
-        )
-            .map((p) => p.value)
-            .slice(0, -1);
+        ).map((p) => p.value);
         const sortedData = xpGainData
             .sort(
                 (a, b) =>
