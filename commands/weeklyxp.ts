@@ -28,7 +28,9 @@ const command: Command = {
             ).filter(
                 (p) => p.status === "fulfilled"
             ) as PromiseFulfilledResult<{ id: string; xp: XpSummary[] }>[]
-        ).map((p) => p.value);
+        )
+            .map((p) => p.value)
+            .slice(0, -1);
         const sortedData = xpGainData
             .sort(
                 (a, b) =>
