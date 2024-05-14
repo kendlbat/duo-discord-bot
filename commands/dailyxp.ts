@@ -6,6 +6,7 @@ import {
     getAllUserData,
     getDuoData,
     getXpSummaries,
+    hasDoneDuolingoToday,
 } from "../duolingo";
 
 const command: Command = {
@@ -17,13 +18,21 @@ const command: Command = {
         const xpGainData = (
             (
                 await Promise.allSettled(
-                    duoData.map(async ({ id, duo }) => {
-                        if (!duo?.id) throw 1;
-                        return {
-                            id,
-                            xp: await getXpSummaries(duo?.id.toString()),
-                        };
-                    })
+                    duoData
+                        .filter(
+                            ({ id, duo }) =>
+                                duo.streakData.currentStreak &&
+                                hasDoneDuolingoToday(
+                                    duo.streakData.currentStreak
+                                )
+                        )
+                        .map(async ({ id, duo }) => {
+                            if (!duo?.id) throw 1;
+                            return {
+                                id,
+                                xp: await getXpSummaries(duo?.id.toString()),
+                            };
+                        })
                 )
             ).filter(
                 (p) => p.status === "fulfilled"
