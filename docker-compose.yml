@@ -7,6 +7,8 @@ services:
             - redis
         environment:
             - TZ=Europe/Vienna
+        volumes:
+            - /pnpm/store:/pnpm/store
     redis:
         image: redis
         restart: always
